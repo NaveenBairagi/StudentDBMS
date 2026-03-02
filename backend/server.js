@@ -10,8 +10,23 @@ const app = express();
 connectDB();
 
 // Middleware
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://student-dbms-sandy.vercel.app',
+    /\.vercel\.app$/,          // allow any vercel.app preview deployment
+];
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. curl, Postman)
+        if (!origin) return callback(null, true);
+        const allowed = allowedOrigins.some((o) =>
+            typeof o === 'string' ? o === origin : o.test(origin)
+        );
+        if (allowed) return callback(null, true);
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
